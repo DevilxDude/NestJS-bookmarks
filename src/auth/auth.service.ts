@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  HttpCode,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon from 'argon2';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
@@ -14,6 +19,7 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {}
 
+  @HttpCode(HttpStatus.OK)
   async login(body: AuthDto) {
     // Find User by email
     const user = await this.prisma.user.findUnique({
