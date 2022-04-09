@@ -89,7 +89,8 @@ describe('App e2e', () => {
           .spec()
           .post('/auth/login')
           .withBody(body)
-          .expectStatus(200);
+          .expectStatus(200)
+          .stores('userAt', 'access_token');
       });
 
       it('Should Throw Exception when no body is provided', () => {
@@ -118,11 +119,21 @@ describe('App e2e', () => {
     });
   });
 
-  // describe('User', () => {
-  //   describe('Get Me', () => {});
+  describe('User', () => {
+    describe('Get Me', () => {
+      it('Should get current user', () => {
+        return pactum
+          .spec()
+          .get('/users/me')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(200);
+      });
+    });
 
-  //   describe('Edit User', () => {});
-  // });
+    // describe('Edit User', () => {});
+  });
 
   // describe('Bookmarks', () => {
   //   describe('Create Bookmark', () => {});
@@ -131,8 +142,8 @@ describe('App e2e', () => {
 
   //   describe('Get Bookmark by ID', () => {});
 
-  //   describe('Edit Bookmark', () => {});
+  //   describe('Edit Bookmark by ID', () => {});
 
-  //   describe('Delete Bookmark', () => {});
+  //   describe('Delete Bookmark by ID', () => {});
   // });
 });
