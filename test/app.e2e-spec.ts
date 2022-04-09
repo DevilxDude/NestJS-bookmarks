@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import * as pactum from 'pactum';
 import { AppModule } from 'src/app.module';
 import { AuthDto } from 'src/auth/dto';
+import { CreateBookmarkDto, EditBookmarkDto } from 'src/bookmark/dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { EditUserDto } from 'src/user/dto';
 
@@ -156,15 +157,138 @@ describe('App e2e', () => {
     });
   });
 
-  // describe('Bookmarks', () => {
-  //   describe('Create Bookmark', () => {});
+  describe('Bookmarks', () => {
+    const createBody: CreateBookmarkDto = {
+      title: 'Google',
+      description: 'Search Engine',
+      link: 'https://www.google.com',
+    };
 
-  //   describe('Get Bookmarks', () => {});
+    const editBody: EditBookmarkDto = {
+      title: 'Facebook',
+      description: 'Social Media',
+      link: 'https://www.facebook.com',
+    };
 
-  //   describe('Get Bookmark by ID', () => {});
+    describe('Get empty bookmarks', () => {
+      it('Should return an empty array of bookmarks', () => {
+        return pactum
+          .spec()
+          .get('/bookmarks')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(200)
+          .expectBody([]);
+      });
+    });
 
-  //   describe('Edit Bookmark by ID', () => {});
+    describe('Create Bookmark', () => {
+      it('Should create a bookmark', () => {
+        return pactum
+          .spec()
+          .post('/bookmarks')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .withBody(createBody)
+          .expectStatus(201)
+          .expectBodyContains(createBody.title)
+          .expectBodyContains(createBody.description)
+          .expectBodyContains(createBody.link)
+          .stores('bookmarkId', 'id');
+      });
+    });
 
-  //   describe('Delete Bookmark by ID', () => {});
-  // });
+    describe('Get Bookmarks', () => {
+      it('Should return an array with a single bookmark', () => {
+        return pactum
+          .spec()
+          .get('/bookmarks')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(200)
+          .expectJsonLength(1);
+      });
+    });
+
+    describe('Get Bookmark by ID', () => {
+      it('Should return a single bookmark', () => {
+        return pactum
+          .spec()
+          .get('/bookmarks/{bookmarkId}')
+          .withPathParams({
+            bookmarkId: '$S{bookmarkId}',
+          })
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(200)
+          .expectBodyContains('$S{bookmarkId}')
+          .expectBodyContains(createBody.title)
+          .expectBodyContains(createBody.description)
+          .expectBodyContains(createBody.link);
+      });
+    });
+
+    describe('Edit Bookmark by ID', () => {
+      it('Should edit a bookmark', () => {
+        return pactum
+          .spec()
+          .patch('/bookmarks/{bookmarkId}')
+          .withPathParams({
+            bookmarkId: '$S{bookmarkId}',
+          })
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .withBody(editBody)
+          .expectStatus(200)
+          .expectBodyContains(editBody.title)
+          .expectBodyContains(editBody.description)
+          .expectBodyContains(editBody.link);
+      });
+    });
+
+    describe('Delete Bookmark by ID', () => {
+      it('Should delete the bookmark', () => {
+        return pactum
+          .spec()
+          .delete('/bookmarks/{bookmarkId}')
+          .withPathParams({
+            bookmarkId: '$S{bookmarkId}',
+          })
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(204)
+          .inspect();
+      });
+
+      it('Should return an empty array of bookmarks', () => {
+        return pactum
+          .spec()
+          .get('/bookmarks')
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(200)
+          .expectBody([]);
+      });
+
+      it('Should throw an error if bookmark does not exist', () => {
+        return pactum
+          .spec()
+          .delete('/bookmarks/{bookmarkId}')
+          .withPathParams({
+            bookmarkId: '$S{bookmarkId}',
+          })
+          .withHeaders({
+            Authorization: 'Bearer $S{userAt}',
+          })
+          .expectStatus(404);
+      });
+    });
+  });
 });
