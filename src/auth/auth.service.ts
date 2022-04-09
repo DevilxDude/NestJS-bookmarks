@@ -1,7 +1,6 @@
 import {
+  ConflictException,
   ForbiddenException,
-  HttpCode,
-  HttpStatus,
   Injectable,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -19,7 +18,6 @@ export class AuthService {
     private readonly config: ConfigService,
   ) {}
 
-  @HttpCode(HttpStatus.OK)
   async login(body: AuthDto) {
     // Find User by email
     const user = await this.prisma.user.findUnique({
@@ -63,7 +61,7 @@ export class AuthService {
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new ForbiddenException('Email is already registered.');
+          throw new ConflictException('Email is already registered.');
         }
       }
       throw error;
